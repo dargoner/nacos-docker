@@ -12,7 +12,7 @@ ENV MODE="cluster" \
     JAVA="java" \
     NACOS_DEBUG="n" \
     TOMCAT_ACCESSLOG_ENABLED="false" \
-    TZ="Asia/Shanghai" \
+    TZ="Asia/Shanghai"
 
 ARG NACOS_VERSION=1.4.1
 
