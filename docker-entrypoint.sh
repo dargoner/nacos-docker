@@ -38,6 +38,8 @@ fi
 
 JAVA_OPT="${JVM_OPTS} ${JAVA_OPT}"
 
+[[ "${SERVICE_POD_NUM}" == 1 ]] && export MODE=standalone
+
 if [[ "${MODE}" == "standalone" ]]; then    
     JAVA_OPT="${JAVA_OPT} -Dnacos.standalone=true"
 else
