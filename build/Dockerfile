@@ -3,7 +3,7 @@ MAINTAINER dargoner "dargun@163.com"
 
 # set environment
 ENV MODE=cluster \
-    PREFER_HOST_MODE=ip\
+    PREFER_HOST_MODE=hostname \
     BASE_DIR=/home/nacos \
     CLASSPATH=.:/home/nacos/conf:$CLASSPATH \
     CLUSTER_CONF=/home/nacos/conf/cluster.conf \
@@ -12,7 +12,12 @@ ENV MODE=cluster \
     JAVA=java \
     NACOS_DEBUG=n \
     TOMCAT_ACCESSLOG_ENABLED=false \
-    TZ="Asia/Shanghai"
+    TZ="Asia/Shanghai" \
+    MYSQL_SERVICE_HOST=mysql \
+    MYSQL_SERVICE_DB_NAME=nacos_devtest \
+    MYSQL_SERVICE_PORT=3306 \
+    MYSQL_SERVICE_USER=nacos \
+    MYSQL_SERVICE_PASSWORD=nacos
 
 ARG NACOS_VERSION=1.4.1
 
