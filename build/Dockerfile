@@ -18,6 +18,9 @@ ARG NACOS_VERSION=1.4.1
 
 WORKDIR /$BASE_DIR
 
+RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list
+RUN cat /etc/apt/sources.list
+RUN rm -Rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y dnsutils
 RUN wget --progress=dot:giga https://github.com/alibaba/nacos/releases/download/${NACOS_VERSION}/nacos-server-${NACOS_VERSION}.tar.gz -P /home
 RUN tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
