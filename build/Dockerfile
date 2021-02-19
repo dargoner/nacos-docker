@@ -18,16 +18,10 @@ ARG NACOS_VERSION=1.4.1
 
 WORKDIR /$BASE_DIR
 
-RUN set -x \
-    && yum update -y \
-    && yum install -y wget iputils nc  vim libcurl
 RUN wget  https://github.com/alibaba/nacos/releases/download/${NACOS_VERSION}/nacos-server-${NACOS_VERSION}.tar.gz -P /home
 RUN tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
     && rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql
-RUN yum autoremove -y wget \
-    && ln -snf /usr/share/zoneinfo/$TIME_ZONE /etc/localtime && echo $TIME_ZONE > /etc/timezone \
-    && yum clean all
-
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone 
 
 ADD bin/docker-startup.sh bin/docker-startup.sh
 ADD conf/application.properties conf/application.properties
