@@ -13,33 +13,78 @@
 # limitations under the License.
 set -x
 export DEFAULT_SEARCH_LOCATIONS="classpath:/,classpath:/config/,file:./,file:./config/"
-export CUSTOM_SEARCH_LOCATIONS=${BASE_DIR}/init.d/,file:${BASE_DIR}/conf/,${DEFAULT_SEARCH_LOCATIONS}
+export CUSTOM_SEARCH_LOCATIONS=${DEFAULT_SEARCH_LOCATIONS},file:${BASE_DIR}/conf/,${BASE_DIR}/init.d/
 export CUSTOM_SEARCH_NAMES="application,custom"
-export MEMBER_LIST=""
+export CLUSTER_NUM=$[$SERVICE_POD_NUM - 1]
 PLUGINS_DIR="/home/nacos/plugins/peer-finder"
 function print_servers(){
    if [[ ! -d "${PLUGINS_DIR}" ]]; then
     echo "" > "$CLUSTER_CONF"
-    for server in ${NACOS_SERVERS}; do
-            echo "$server" >> "$CLUSTER_CONF"
+    for i in $(seq 0 $CLUSTER_NUM );do
+	echo $SERVICE_NAME-$i.$SERVICE_NAME.$TENANT_ID.svc.cluster.local.:8848 >> "$CLUSTER_CONF"
     done
    else
     bash $PLUGINS_DIR/plugin.sh
    sleep 30
-	fi
+   fi
 }
 #===========================================================================================
 # JVM Configuration
 #===========================================================================================
-if [[ "${MODE}" == "standalone" ]]; then
 
-    JAVA_OPT="${JAVA_OPT} -Xms${JVM_XMS} -Xmx${JVM_XMX} -Xmn${JVM_XMN}"
+if test -z "$JVM_OPTS" ; then
+
+  case ${MEMORY_SIZE:-medium} in
+    "micro")
+       JVM_OPTS="-Xms90m -Xmx90m -Xss512k  -XX:MaxDirectMemorySize=12M"
+       echo "Optimizing java process for 128M Memory...." >&2
+       ;;
+    "small")
+       JVM_OPTS="-Xms180m -Xmx180m -Xss512k -XX:MaxDirectMemorySize=24M "
+       echo "Optimizing java process for 256M Memory...." >&2
+       ;;
+    "medium")
+       JVM_OPTS="-Xms360m -Xmx360m -Xss512k -XX:MaxDirectMemorySize=48M"
+       echo "Optimizing java process for 512M Memory...." >&2
+       ;;
+    "large")
+       JVM_OPTS="-Xms720m -Xmx720m -Xss512k -XX:MaxDirectMemorySize=96M "
+       echo "Optimizing java process for 1G Memory...." >&2
+       ;;
+    "2xlarge")
+       JVM_OPTS="-Xms1420m -Xmx1420m -Xss512k -XX:MaxDirectMemorySize=192M"
+       echo "Optimizing java process for 2G Memory...." >&2
+       ;;
+    "4xlarge")
+       JVM_OPTS="-Xms2840m -Xmx2840m -Xss512k -XX:MaxDirectMemorySize=384M "
+       echo "Optimizing java process for 4G Memory...." >&2
+       ;;
+    "8xlarge")
+       JVM_OPTS="-Xms5680m -Xmx5680m -Xss512k -XX:MaxDirectMemorySize=768M"
+       echo "Optimizing java process for 8G Memory...." >&2
+       ;;
+    "16xlarge")
+       JVM_OPTS="-Xms12G -Xmx12G -Xss512k -XX:MaxDirectMemorySize=3000M"
+       echo "Optimizing java process for 16G Memory...." >&2
+       ;;
+    32xlarge|64xlarge)
+       JVM_OPTS="-Xms22G -Xmx22G -Xss512k -XX:MaxDirectMemorySize=6000M"
+       echo "Optimizing java process for biger Memory...." >&2
+       ;;
+    *)
+       JVM_OPTS="-Xms128m -Xmx128m -Xss512k -XX:MaxDirectMemorySize=24M"
+       echo "Optimizing java process for 256M Memory...." >&2
+       ;;
+  esac
+  
+fi
+
+JAVA_OPT = "${JVM_OPTS} ${JAVA_OPT}"
+
+if [[ "${MODE}" == "standalone" ]]; then    
     JAVA_OPT="${JAVA_OPT} -Dnacos.standalone=true"
 else
-  if [[ "${EMBEDDED_STORAGE}" == "embedded" ]]; then
-        JAVA_OPT="${JAVA_OPT} -DembeddedStorage=true"
-    fi
-  JAVA_OPT="${JAVA_OPT} -server -Xms${JVM_XMS} -Xmx${JVM_XMX} -Xmn${JVM_XMN} -XX:MetaspaceSize=${JVM_MS} -XX:MaxMetaspaceSize=${JVM_MMS}"
+  
   if [[ "${NACOS_DEBUG}" == "y" ]]; then
     JAVA_OPT="${JAVA_OPT} -Xdebug -Xrunjdwp:transport=dt_socket,address=9555,server=y,suspend=n"
   fi
@@ -74,23 +119,16 @@ if [[ ! -z "${IGNORED_INTERFACES}" ]]; then
     JAVA_OPT="${JAVA_OPT} -Dnacos.inetutils.ignored-interfaces=${IGNORED_INTERFACES}"
 fi
 
-### If turn on auth system:
-if [[ ! -z "${NACOS_AUTH_ENABLE}" ]]; then
-    JAVA_OPT="${JAVA_OPT} -Dnacos.core.auth.enabled=${NACOS_AUTH_ENABLE}"
-fi
-
 if [[ "${PREFER_HOST_MODE}" == "hostname" ]]; then
     JAVA_OPT="${JAVA_OPT} -Dnacos.preferHostnameOverIp=true"
 fi
-
-JAVA_OPT="${JAVA_OPT} -Dnacos.member.list=${MEMBER_LIST}"
 
 JAVA_MAJOR_VERSION=$($JAVA -version 2>&1 | sed -E -n 's/.* version "([0-9]*).*$/\1/p')
 if [[ "$JAVA_MAJOR_VERSION" -ge "9" ]] ; then
   JAVA_OPT="${JAVA_OPT} -cp .:${BASE_DIR}/plugins/cmdb/*.jar:${BASE_DIR}/plugins/mysql/*.jar"
   JAVA_OPT="${JAVA_OPT} -Xlog:gc*:file=${BASE_DIR}/logs/nacos_gc.log:time,tags:filecount=10,filesize=102400"
 else
-  JAVA_OPT="${JAVA_OPT} -Djava.ext.dirs=${JAVA_HOME}/jre/lib/ext:${JAVA_HOME}/lib/ext:${BASE_DIR}/plugins/health:${BASE_DIR}/plugins/cmdb:${BASE_DIR}/plugins/mysql"
+  JAVA_OPT="${JAVA_OPT} -Djava.ext.dirs=${JAVA_HOME}/jre/lib/ext:${JAVA_HOME}/lib/ext:${BASE_DIR}/plugins/cmdb:${BASE_DIR}/plugins/mysql"
   JAVA_OPT="${JAVA_OPT} -Xloggc:${BASE_DIR}/logs/nacos_gc.log -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
 fi
 
