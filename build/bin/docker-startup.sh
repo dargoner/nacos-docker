@@ -41,7 +41,9 @@ JAVA_OPT="${JVM_OPTS} ${JAVA_OPT}"
 if [[ "${MODE}" == "standalone" ]]; then    
     JAVA_OPT="${JAVA_OPT} -Dnacos.standalone=true"
 else
-  
+  if [[ "${EMBEDDED_STORAGE}" == "embedded" ]]; then
+    JAVA_OPT="${JAVA_OPT} -DembeddedStorage=true"
+  fi
   if [[ "${NACOS_DEBUG}" == "y" ]]; then
     JAVA_OPT="${JAVA_OPT} -Xdebug -Xrunjdwp:transport=dt_socket,address=9555,server=y,suspend=n"
   fi
@@ -80,6 +82,8 @@ if [[ "${PREFER_HOST_MODE}" == "hostname" ]]; then
     JAVA_OPT="${JAVA_OPT} -Dnacos.preferHostnameOverIp=true"
 fi
 
+JAVA_OPT="${JAVA_OPT} -Dnacos.member.list=${MEMBER_LIST}"
+
 JAVA_MAJOR_VERSION=$($JAVA -version 2>&1 | sed -E -n 's/.* version "([0-9]*).*$/\1/p')
 if [[ "$JAVA_MAJOR_VERSION" -ge "9" ]] ; then
   JAVA_OPT="${JAVA_OPT} -cp .:${BASE_DIR}/plugins/cmdb/*.jar:${BASE_DIR}/plugins/mysql/*.jar"
@@ -88,7 +92,6 @@ else
   JAVA_OPT="${JAVA_OPT} -Djava.ext.dirs=${JAVA_HOME}/jre/lib/ext:${JAVA_HOME}/lib/ext:${BASE_DIR}/plugins/cmdb:${BASE_DIR}/plugins/mysql"
   JAVA_OPT="${JAVA_OPT} -Xloggc:${BASE_DIR}/logs/nacos_gc.log -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
 fi
-
 
 
 JAVA_OPT="${JAVA_OPT} -Dnacos.home=${BASE_DIR}"
