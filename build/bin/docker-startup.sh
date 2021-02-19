@@ -33,53 +33,10 @@ function print_servers(){
 #===========================================================================================
 
 if test -z "$JVM_OPTS" ; then
-
-  case ${MEMORY_SIZE:-medium} in
-    "micro")
-       JVM_OPTS="-Xms90m -Xmx90m -Xss512k  -XX:MaxDirectMemorySize=12M"
-       echo "Optimizing java process for 128M Memory...." >&2
-       ;;
-    "small")
-       JVM_OPTS="-Xms180m -Xmx180m -Xss512k -XX:MaxDirectMemorySize=24M "
-       echo "Optimizing java process for 256M Memory...." >&2
-       ;;
-    "medium")
-       JVM_OPTS="-Xms360m -Xmx360m -Xss512k -XX:MaxDirectMemorySize=48M"
-       echo "Optimizing java process for 512M Memory...." >&2
-       ;;
-    "large")
-       JVM_OPTS="-Xms720m -Xmx720m -Xss512k -XX:MaxDirectMemorySize=96M "
-       echo "Optimizing java process for 1G Memory...." >&2
-       ;;
-    "2xlarge")
-       JVM_OPTS="-Xms1420m -Xmx1420m -Xss512k -XX:MaxDirectMemorySize=192M"
-       echo "Optimizing java process for 2G Memory...." >&2
-       ;;
-    "4xlarge")
-       JVM_OPTS="-Xms2840m -Xmx2840m -Xss512k -XX:MaxDirectMemorySize=384M "
-       echo "Optimizing java process for 4G Memory...." >&2
-       ;;
-    "8xlarge")
-       JVM_OPTS="-Xms5680m -Xmx5680m -Xss512k -XX:MaxDirectMemorySize=768M"
-       echo "Optimizing java process for 8G Memory...." >&2
-       ;;
-    "16xlarge")
-       JVM_OPTS="-Xms12G -Xmx12G -Xss512k -XX:MaxDirectMemorySize=3000M"
-       echo "Optimizing java process for 16G Memory...." >&2
-       ;;
-    32xlarge|64xlarge)
-       JVM_OPTS="-Xms22G -Xmx22G -Xss512k -XX:MaxDirectMemorySize=6000M"
-       echo "Optimizing java process for biger Memory...." >&2
-       ;;
-    *)
-       JVM_OPTS="-Xms128m -Xmx128m -Xss512k -XX:MaxDirectMemorySize=24M"
-       echo "Optimizing java process for 256M Memory...." >&2
-       ;;
-  esac
-  
+  JVM_OPTS="-server -XX:+UseContainerSupport -XX:-UseAdaptiveSizePolicy -XX:MaxRAMPercentage=80.0 -XX:InitialRAMPercentage=80.0 -XX:MinRAMPercentage=80.0"
 fi
 
-JAVA_OPT = "${JVM_OPTS} ${JAVA_OPT}"
+JAVA_OPT="${JVM_OPTS} ${JAVA_OPT}"
 
 if [[ "${MODE}" == "standalone" ]]; then    
     JAVA_OPT="${JAVA_OPT} -Dnacos.standalone=true"
