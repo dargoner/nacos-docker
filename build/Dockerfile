@@ -1,5 +1,5 @@
-FROM centos:7.5.1804
-MAINTAINER pader "huangmnlove@163.com"
+FROM openjdk:8-jdk
+MAINTAINER dargoner "dargun@163.com"
 
 # set environment
 ENV MODE="cluster" \
@@ -8,17 +8,11 @@ ENV MODE="cluster" \
     CLASSPATH=".:/home/nacos/conf:$CLASSPATH" \
     CLUSTER_CONF="/home/nacos/conf/cluster.conf" \
     FUNCTION_MODE="all" \
-    JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk" \
     NACOS_USER="nacos" \
-    JAVA="/usr/lib/jvm/java-1.8.0-openjdk/bin/java" \
-    JVM_XMS="512m" \
-    JVM_XMX="512m" \
-    JVM_XMN="256m" \
-    JVM_MS="32m" \
-    JVM_MMS="80m" \
+    JAVA="java" \
     NACOS_DEBUG="n" \
     TOMCAT_ACCESSLOG_ENABLED="false" \
-    TIME_ZONE="Asia/Shanghai"
+    TZ="Asia/Shanghai" \
 
 ARG NACOS_VERSION=1.4.1
 
@@ -26,7 +20,7 @@ WORKDIR /$BASE_DIR
 
 RUN set -x \
     && yum update -y \
-    && yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel wget iputils nc  vim libcurl
+    && yum install -y wget iputils nc  vim libcurl
 RUN wget  https://github.com/alibaba/nacos/releases/download/${NACOS_VERSION}/nacos-server-${NACOS_VERSION}.tar.gz -P /home
 RUN tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
     && rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql
@@ -35,12 +29,9 @@ RUN yum autoremove -y wget \
     && yum clean all
 
 
-
-
 ADD bin/docker-startup.sh bin/docker-startup.sh
 ADD conf/application.properties conf/application.properties
 ADD init.d/custom.properties init.d/custom.properties
-
 
 # set startup log dir
 RUN mkdir -p logs \
